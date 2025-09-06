@@ -3,9 +3,9 @@ const apiUrl = "/api/ProductFunction";
 // Create or Update Product
 async function createOrUpdate(action) {
     const product = {
-        id: document.getElementById("id").value.trim(),
-        name: document.getElementById("name").value.trim(),
-        Category: document.getElementById("Category").value.trim(),
+        id: document.getElementById("id").value,
+        name: document.getElementById("name").value,
+        Category: document.getElementById("Category").value,
         price: parseFloat(document.getElementById("price").value)
     };
 
@@ -22,15 +22,15 @@ async function createOrUpdate(action) {
         document.getElementById("output").innerText = JSON.stringify(data, null, 2);
         loadAllProducts();
     } catch (err) {
-        console.error(err);
-        document.getElementById("output").innerText = err;
+        console.error("Error:", err);
+        document.getElementById("output").innerText = "Error: " + err;
     }
 }
 
 // Read Product by ID and Category
 async function readProduct() {
-    const id = document.getElementById("readId").value.trim();
-    const category = document.getElementById("readCategory").value.trim();
+    const id = document.getElementById("readId").value;
+    const category = document.getElementById("readCategory").value;
 
     try {
         const res = await fetch(`${apiUrl}?id=${encodeURIComponent(id)}&Category=${encodeURIComponent(category)}`);
@@ -39,14 +39,14 @@ async function readProduct() {
         document.getElementById("output").innerText = JSON.stringify(data, null, 2);
     } catch (err) {
         console.error(err);
-        document.getElementById("output").innerText = err;
+        document.getElementById("output").innerText = "Error: " + err;
     }
 }
 
 // Delete Product by ID and Category
 async function deleteProduct() {
-    const id = document.getElementById("readId").value.trim();
-    const category = document.getElementById("readCategory").value.trim();
+    const id = document.getElementById("readId").value;
+    const category = document.getElementById("readCategory").value;
 
     try {
         const res = await fetch(`${apiUrl}?id=${encodeURIComponent(id)}&Category=${encodeURIComponent(category)}`, { method: "DELETE" });
@@ -55,7 +55,7 @@ async function deleteProduct() {
         loadAllProducts();
     } catch (err) {
         console.error(err);
-        document.getElementById("output").innerText = err;
+        document.getElementById("output").innerText = "Error: " + err;
     }
 }
 
@@ -80,12 +80,14 @@ async function loadAllProducts() {
             });
         }
     } catch (err) {
-        console.error(err);
+        console.error("Load error:", err);
+        document.getElementById("output").innerText = "Error: " + err;
     }
 }
 
 // Load all products when the page loads
 window.onload = loadAllProducts;
+
 
 
 

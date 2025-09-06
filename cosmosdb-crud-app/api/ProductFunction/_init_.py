@@ -38,6 +38,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
 def create_product(req):
     product = req.get_json()
+    # Ensure keys match frontend
     if "id" not in product or "Category" not in product:
         return func.HttpResponse("ID and Category are required!", status_code=400)
     try:
@@ -57,10 +58,8 @@ def create_product(req):
 def read_product(req):
     product_id = req.params.get('id')
     category = req.params.get('Category')
-
     try:
         if product_id and category:
-            # Read single item
             item = container.read_item(item=product_id, partition_key=category)
             return func.HttpResponse(json.dumps(item), mimetype="application/json")
         else:
@@ -80,9 +79,17 @@ def update_product(req):
     if "id" not in product or "Category" not in product:
         return func.HttpResponse("ID and Category are required!", status_code=400)
     
-    container.upsert_item(product)
+    # Ensure only id, Category, name, price are considered
+    updated_product = {
+        "id": product["id"],
+        "Category": product["Category"],
+        "name": product.get("name", ""),
+        "price": product.get("price", 0)
+    }
+
+    container.upsert_item(updated_product)
     return func.HttpResponse(
-        json.dumps({"message": f"Product {product['id']} updated successfully!"}),
+        json.dumps({"message": f"Product {updated_product['id']} updated successfully!"}),
         mimetype="application/json"
     )
 
@@ -103,4 +110,3 @@ def delete_product(req):
             mimetype="application/json",
             status_code=404
         )
-

@@ -8,7 +8,7 @@ from azure.cosmos import CosmosClient, exceptions
 URL = os.environ["COSMOS_URL"]
 KEY = os.environ["COSMOS_KEY"]
 DATABASE_NAME = os.environ["DATABASE_NAME"]
-CONTAINER_NAME = os.environ["CONTAINER_NAME"]
+CONTAINER_NAME = "Products"  # Hardcoded container name
 
 client = CosmosClient(URL, credential=KEY)
 database = client.get_database_client(DATABASE_NAME)
@@ -103,3 +103,4 @@ def delete_product(req):
             mimetype="application/json",
             status_code=404
         )
+

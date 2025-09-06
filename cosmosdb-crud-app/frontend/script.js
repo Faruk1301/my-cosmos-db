@@ -3,10 +3,10 @@ const apiUrl = "/api/ProductFunction";
 // Create or Update Product
 async function createOrUpdate(action) {
     const product = {
-        id: document.getElementById("id").value,
-        name: document.getElementById("name").value,       // fixed key
-        Category: document.getElementById("Category").value,
-        price: parseFloat(document.getElementById("price").value) // fixed key
+        id: document.getElementById("id").value.trim(),
+        name: document.getElementById("name").value.trim(),
+        Category: document.getElementById("Category").value.trim(),
+        price: parseFloat(document.getElementById("price").value)
     };
 
     const method = action === "create" ? "POST" : "PUT";
@@ -34,10 +34,10 @@ async function createOrUpdate(action) {
     }
 }
 
-// Read Product by ID and Category
+// Read Product
 async function readProduct() {
-    const id = document.getElementById("readId").value;
-    const category = document.getElementById("readCategory").value;
+    const id = document.getElementById("readId").value.trim();
+    const category = document.getElementById("readCategory").value.trim();
 
     try {
         const res = await fetch(`${apiUrl}?id=${encodeURIComponent(id)}&Category=${encodeURIComponent(category)}`);
@@ -50,10 +50,10 @@ async function readProduct() {
     }
 }
 
-// Delete Product by ID and Category
+// Delete Product
 async function deleteProduct() {
-    const id = document.getElementById("readId").value;
-    const category = document.getElementById("readCategory").value;
+    const id = document.getElementById("readId").value.trim();
+    const category = document.getElementById("readCategory").value.trim();
 
     try {
         const res = await fetch(`${apiUrl}?id=${encodeURIComponent(id)}&Category=${encodeURIComponent(category)}`, { method: "DELETE" });
@@ -67,16 +67,12 @@ async function deleteProduct() {
     }
 }
 
-// Load All Products (Table)
+// Load all products
 async function loadAllProducts() {
     try {
         const res = await fetch(apiUrl);
         let products = [];
-        try {
-            products = await res.json();
-        } catch (e) {
-            console.error("Error parsing products:", e);
-        }
+        try { products = await res.json(); } catch (e) { console.error("Parsing error:", e); }
 
         const tbody = document.querySelector("#productsTable tbody");
         tbody.innerHTML = "";
@@ -97,5 +93,4 @@ async function loadAllProducts() {
     }
 }
 
-// Load all products when the page loads
 window.onload = loadAllProducts;

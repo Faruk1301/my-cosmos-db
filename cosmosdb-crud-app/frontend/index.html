@@ -1,51 +1,100 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Product App Delivery</title>
-    <meta charset="UTF-8">
-    <script src="script.js" defer></script>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        input { margin: 5px; padding: 5px; }
-        button { margin: 5px; padding: 6px 12px; cursor: pointer; }
-        table { border-collapse: collapse; width: 100%; margin-top: 20px; }
-        th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-        th { background-color: #f2f2f2; }
-        #output { margin-top: 15px; white-space: pre-wrap; }
-    </style>
+  <title>Product CRUD</title>
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    input { margin: 5px; }
+    table { margin-top: 20px; border-collapse: collapse; width: 100%; }
+    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
+    th { background: #eee; }
+  </style>
 </head>
 <body>
-    <h1>Product Management</h1>
+  <h2>Product Management</h2>
 
-    <h3>Create / Update Product</h3>
-    <input type="text" id="id" placeholder="ID">
-    <input type="text" id="name" placeholder="Name">
-    <input type="text" id="Category" placeholder="Category">
-    <input type="number" id="price" placeholder="Price">
-    <br>
-    <button onclick="createOrUpdate('create')">Create</button>
-    <button onclick="createOrUpdate('update')">Update</button>
+  <input id="id" placeholder="ID">
+  <input id="name" placeholder="Name">
+  <input id="category" placeholder="Category">
+  <input id="price" placeholder="Price">
+  <br>
+  <button onclick="createProduct()">Create</button>
+  <button onclick="updateProduct()">Update</button>
+  <button onclick="readProduct()">Read</button>
+  <button onclick="deleteProduct()">Delete</button>
 
-    <h3>Read / Delete Product</h3>
-    <input type="text" id="readId" placeholder="ID">
-    <input type="text" id="readCategory" placeholder="Category">
-    <br>
-    <button onclick="readProduct()">Read</button>
-    <button onclick="deleteProduct()">Delete</button>
+  <h3>All Products</h3>
+  <table>
+    <thead>
+      <tr><th>ID</th><th>Name</th><th>Category</th><th>Price</th></tr>
+    </thead>
+    <tbody id="products-body"></tbody>
+  </table>
 
-    <h3>All Products</h3>
-    <table id="productsTable">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Name</th>
-                <th>Category</th>
-                <th>Price</th>
-            </tr>
-        </thead>
-        <tbody></tbody>
-    </table>
+  <script>
+    const API_URL = "/api/ProductFunction";
 
-    <div id="output"></div>
+    async function createProduct() {
+      const product = getProductFormData();
+      const response = await fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(product)
+      });
+      alert((await response.json()).message || "Error");
+      loadProducts();
+    }
+
+    async function updateProduct() {
+      const product = getProductFormData();
+      const response = await fetch(API_URL, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(product)
+      });
+      alert((await response.json()).message || "Error");
+      loadProducts();
+    }
+
+    async function readProduct() {
+      const id = document.getElementById("id").value;
+      const category = document.getElementById("category").value;
+      const response = await fetch(`${API_URL}?id=${id}&Category=${category}`);
+      alert(JSON.stringify(await response.json(), null, 2));
+    }
+
+    async function deleteProduct() {
+      const id = document.getElementById("id").value;
+      const category = document.getElementById("category").value;
+      const response = await fetch(`${API_URL}?id=${id}&Category=${category}`, { method: "DELETE" });
+      alert((await response.json()).message || "Error");
+      loadProducts();
+    }
+
+    async function loadProducts() {
+      const response = await fetch(API_URL);
+      const text = await response.text();
+      const products = text ? JSON.parse(text) : [];
+      const tbody = document.getElementById("products-body");
+      tbody.innerHTML = "";
+      products.forEach(p => {
+        tbody.innerHTML += `<tr>
+          <td>${p.id}</td><td>${p.name}</td><td>${p.Category}</td><td>${p.price}</td>
+        </tr>`;
+      });
+    }
+
+    function getProductFormData() {
+      return {
+        id: document.getElementById("id").value,
+        name: document.getElementById("name").value,
+        Category: document.getElementById("category").value,
+        price: parseFloat(document.getElementById("price").value || 0)
+      };
+    }
+
+    window.onload = loadProducts;
+  </script>
 </body>
 </html>
+

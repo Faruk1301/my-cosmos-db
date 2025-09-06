@@ -1,24 +1,23 @@
 const apiUrl = "/api/ProductFunction";
 
-// Helper to trim input values
-function getInputValue(id) {
-    const el = document.getElementById(id);
-    return el ? el.value.trim() : "";
+// --- Helper: safely parse JSON or fallback ---
+async function safeFetch(res) {
+    const text = await res.text();
+    try {
+        return JSON.parse(text);
+    } catch {
+        return { message: text };
+    }
 }
 
 // Create or Update Product
 async function createOrUpdate(action) {
     const product = {
-        id: getInputValue("id"),
-        name: getInputValue("name"),
-        Category: getInputValue("Category"),
-        price: parseFloat(getInputValue("price")) || 0
+        id: document.getElementById("id").value,
+        name: document.getElementById("name").value,
+        Category: document.getElementById("Category").value,
+        price: parseFloat(document.getElementById("price").value)
     };
-
-    if (!product.id || !product.Category) {
-        document.getElementById("output").innerText = "ID and Category are required!";
-        return;
-    }
 
     const method = action === "create" ? "POST" : "PUT";
 
@@ -29,61 +28,53 @@ async function createOrUpdate(action) {
             body: JSON.stringify(product)
         });
 
-        const data = await res.json();
+        const data = await safeFetch(res);
         document.getElementById("output").innerText = JSON.stringify(data, null, 2);
+
         loadAllProducts();
     } catch (err) {
         console.error(err);
-        document.getElementById("output").innerText = "Error: " + err;
+        document.getElementById("output").innerText = err.toString();
     }
 }
 
 // Read Product by ID and Category
 async function readProduct() {
-    const id = getInputValue("readId");
-    const category = getInputValue("readCategory");
-
-    if (!id || !category) {
-        document.getElementById("output").innerText = "ID and Category are required!";
-        return;
-    }
+    const id = document.getElementById("readId").value;
+    const category = document.getElementById("readCategory").value;
 
     try {
         const res = await fetch(`${apiUrl}?id=${encodeURIComponent(id)}&Category=${encodeURIComponent(category)}`);
-        const data = await res.json();
+        const data = await safeFetch(res);
         document.getElementById("output").innerText = JSON.stringify(data, null, 2);
     } catch (err) {
         console.error(err);
-        document.getElementById("output").innerText = "Error: " + err;
+        document.getElementById("output").innerText = err.toString();
     }
 }
 
 // Delete Product by ID and Category
 async function deleteProduct() {
-    const id = getInputValue("readId");
-    const category = getInputValue("readCategory");
-
-    if (!id || !category) {
-        document.getElementById("output").innerText = "ID and Category are required!";
-        return;
-    }
+    const id = document.getElementById("readId").value;
+    const category = document.getElementById("readCategory").value;
 
     try {
         const res = await fetch(`${apiUrl}?id=${encodeURIComponent(id)}&Category=${encodeURIComponent(category)}`, { method: "DELETE" });
-        const data = await res.json();
+        const data = await safeFetch(res);
         document.getElementById("output").innerText = JSON.stringify(data, null, 2);
+
         loadAllProducts();
     } catch (err) {
         console.error(err);
-        document.getElementById("output").innerText = "Error: " + err;
+        document.getElementById("output").innerText = err.toString();
     }
 }
 
-// Load All Products into Table
+// Load All Products (Table)
 async function loadAllProducts() {
     try {
         const res = await fetch(apiUrl);
-        const products = await res.json();
+        const products = await safeFetch(res);
 
         const tbody = document.querySelector("#productsTable tbody");
         tbody.innerHTML = "";
@@ -101,10 +92,12 @@ async function loadAllProducts() {
         }
     } catch (err) {
         console.error(err);
+        document.getElementById("output").innerText = err.toString();
     }
 }
 
-// Load all products on page load
+// Load all products when the page loads
 window.onload = loadAllProducts;
+
 
 

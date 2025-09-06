@@ -17,7 +17,14 @@ async function createOrUpdate(action) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(product)
         });
-        const data = await res.json();
+
+        let data;
+        try {
+            data = await res.json();
+        } catch {
+            data = { message: await res.text() };
+        }
+
         document.getElementById("output").innerText = JSON.stringify(data, null, 2);
         loadAllProducts();
     } catch (err) {
@@ -30,9 +37,16 @@ async function createOrUpdate(action) {
 async function readProduct() {
     const id = document.getElementById("readId").value;
     const category = document.getElementById("readCategory").value;
+
     try {
         const res = await fetch(`${apiUrl}?id=${encodeURIComponent(id)}&Category=${encodeURIComponent(category)}`);
-        const data = await res.json();
+        let data;
+        try {
+            data = await res.json();
+        } catch {
+            data = { message: await res.text() };
+        }
+
         document.getElementById("output").innerText = JSON.stringify(data, null, 2);
     } catch (err) {
         console.error(err);
@@ -44,9 +58,16 @@ async function readProduct() {
 async function deleteProduct() {
     const id = document.getElementById("readId").value;
     const category = document.getElementById("readCategory").value;
+
     try {
         const res = await fetch(`${apiUrl}?id=${encodeURIComponent(id)}&Category=${encodeURIComponent(category)}`, { method: "DELETE" });
-        const data = await res.json();
+        let data;
+        try {
+            data = await res.json();
+        } catch {
+            data = { message: await res.text() };
+        }
+
         document.getElementById("output").innerText = JSON.stringify(data, null, 2);
         loadAllProducts();
     } catch (err) {
@@ -55,31 +76,38 @@ async function deleteProduct() {
     }
 }
 
-// Load all products and populate table
+// Load All Products (Table)
 async function loadAllProducts() {
     try {
         const res = await fetch(apiUrl);
-        const products = await res.json();
+        let products = [];
+        try {
+            products = await res.json();
+        } catch (e) {
+            console.error("Error parsing products:", e);
+        }
+
         const tbody = document.querySelector("#productsTable tbody");
         tbody.innerHTML = "";
 
-        products.forEach(p => {
-            const row = `<tr>
-                <td>${p.id}</td>
-                <td>${p.name}</td>
-                <td>${p.Category}</td>
-                <td>${p.price}</td>
-            </tr>`;
-            tbody.insertAdjacentHTML("beforeend", row);
-        });
+        if (Array.isArray(products)) {
+            products.forEach(p => {
+                const row = `<tr>
+                    <td>${p.id}</td>
+                    <td>${p.name}</td>
+                    <td>${p.Category}</td>
+                    <td>${p.price}</td>
+                </tr>`;
+                tbody.insertAdjacentHTML("beforeend", row);
+            });
+        }
     } catch (err) {
-        console.error(err);
+        console.error("Load error:", err);
     }
 }
 
-// Load products on page load
+// Load all products when the page loads
 window.onload = loadAllProducts;
-
 
 
 

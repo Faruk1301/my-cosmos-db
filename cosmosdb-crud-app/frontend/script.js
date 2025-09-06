@@ -1,15 +1,5 @@
 const apiUrl = "/api/ProductFunction";
 
-// --- Helper: safely parse JSON or fallback ---
-async function safeFetch(res) {
-    const text = await res.text();
-    try {
-        return JSON.parse(text);
-    } catch {
-        return { message: text };
-    }
-}
-
 // Create or Update Product
 async function createOrUpdate(action) {
     const product = {
@@ -27,14 +17,12 @@ async function createOrUpdate(action) {
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify(product)
         });
-
-        const data = await safeFetch(res);
+        const data = await res.json();
         document.getElementById("output").innerText = JSON.stringify(data, null, 2);
-
         loadAllProducts();
     } catch (err) {
         console.error(err);
-        document.getElementById("output").innerText = err.toString();
+        document.getElementById("output").innerText = err;
     }
 }
 
@@ -42,14 +30,13 @@ async function createOrUpdate(action) {
 async function readProduct() {
     const id = document.getElementById("readId").value;
     const category = document.getElementById("readCategory").value;
-
     try {
         const res = await fetch(`${apiUrl}?id=${encodeURIComponent(id)}&Category=${encodeURIComponent(category)}`);
-        const data = await safeFetch(res);
+        const data = await res.json();
         document.getElementById("output").innerText = JSON.stringify(data, null, 2);
     } catch (err) {
         console.error(err);
-        document.getElementById("output").innerText = err.toString();
+        document.getElementById("output").innerText = err;
     }
 }
 
@@ -57,47 +44,43 @@ async function readProduct() {
 async function deleteProduct() {
     const id = document.getElementById("readId").value;
     const category = document.getElementById("readCategory").value;
-
     try {
         const res = await fetch(`${apiUrl}?id=${encodeURIComponent(id)}&Category=${encodeURIComponent(category)}`, { method: "DELETE" });
-        const data = await safeFetch(res);
+        const data = await res.json();
         document.getElementById("output").innerText = JSON.stringify(data, null, 2);
-
         loadAllProducts();
     } catch (err) {
         console.error(err);
-        document.getElementById("output").innerText = err.toString();
+        document.getElementById("output").innerText = err;
     }
 }
 
-// Load All Products (Table)
+// Load all products and populate table
 async function loadAllProducts() {
     try {
         const res = await fetch(apiUrl);
-        const products = await safeFetch(res);
-
+        const products = await res.json();
         const tbody = document.querySelector("#productsTable tbody");
         tbody.innerHTML = "";
 
-        if (Array.isArray(products)) {
-            products.forEach(p => {
-                const row = `<tr>
-                    <td>${p.id}</td>
-                    <td>${p.name}</td>
-                    <td>${p.Category}</td>
-                    <td>${p.price}</td>
-                </tr>`;
-                tbody.insertAdjacentHTML("beforeend", row);
-            });
-        }
+        products.forEach(p => {
+            const row = `<tr>
+                <td>${p.id}</td>
+                <td>${p.name}</td>
+                <td>${p.Category}</td>
+                <td>${p.price}</td>
+            </tr>`;
+            tbody.insertAdjacentHTML("beforeend", row);
+        });
     } catch (err) {
         console.error(err);
-        document.getElementById("output").innerText = err.toString();
     }
 }
 
-// Load all products when the page loads
+// Load products on page load
 window.onload = loadAllProducts;
+
+
 
 
 

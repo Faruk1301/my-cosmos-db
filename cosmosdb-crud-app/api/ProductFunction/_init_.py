@@ -4,11 +4,10 @@ import json
 import os
 from azure.cosmos import CosmosClient, exceptions
 
-# --- Cosmos DB config from Function App settings ---
 URL = os.environ["COSMOS_URL"]
 KEY = os.environ["COSMOS_KEY"]
 DATABASE_NAME = os.environ["DATABASE_NAME"]
-CONTAINER_NAME = "Products"  # Hardcoded container name
+CONTAINER_NAME = "Products"
 
 client = CosmosClient(URL, credential=KEY)
 database = client.get_database_client(DATABASE_NAME)
@@ -29,20 +28,24 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             return delete_product(req)
         else:
             return func.HttpResponse("Method not allowed", status_code=405)
-
     except Exception as e:
         logging.error(str(e))
         return func.HttpResponse(f"Error: {str(e)}", status_code=500)
 
-# --- CRUD Functions ---
-
 def create_product(req):
     product = req.get_json()
-    # Ensure keys match frontend
     if "id" not in product or "Category" not in product:
         return func.HttpResponse("ID and Category are required!", status_code=400)
+
+    product_normalized = {
+        "id": product["id"],
+        "Category": product["Category"],
+        "name": product.get("name", ""),
+        "price": product.get("price", 0)
+    }
+
     try:
-        container.create_item(body=product)
+        container.create_item(body=product_normalized)
         return func.HttpResponse(
             json.dumps({"message": f"Product {product['id']} created successfully!"}),
             mimetype="application/json",
@@ -63,23 +66,17 @@ def read_product(req):
             item = container.read_item(item=product_id, partition_key=category)
             return func.HttpResponse(json.dumps(item), mimetype="application/json")
         else:
-            # Return all items
             query = "SELECT * FROM c"
             items = list(container.query_items(query=query, enable_cross_partition_query=True))
             return func.HttpResponse(json.dumps(items), mimetype="application/json")
     except exceptions.CosmosResourceNotFoundError:
-        return func.HttpResponse(
-            json.dumps({"error": "Product not found"}),
-            mimetype="application/json",
-            status_code=404
-        )
+        return func.HttpResponse(json.dumps({"error": "Product not found"}), mimetype="application/json", status_code=404)
 
 def update_product(req):
     product = req.get_json()
     if "id" not in product or "Category" not in product:
         return func.HttpResponse("ID and Category are required!", status_code=400)
-    
-    # Ensure only id, Category, name, price are considered
+
     updated_product = {
         "id": product["id"],
         "Category": product["Category"],
@@ -88,10 +85,7 @@ def update_product(req):
     }
 
     container.upsert_item(updated_product)
-    return func.HttpResponse(
-        json.dumps({"message": f"Product {updated_product['id']} updated successfully!"}),
-        mimetype="application/json"
-    )
+    return func.HttpResponse(json.dumps({"message": f"Product {product['id']} updated successfully!"}), mimetype="application/json")
 
 def delete_product(req):
     product_id = req.params.get('id')
@@ -100,13 +94,6 @@ def delete_product(req):
         return func.HttpResponse("ID and Category are required!", status_code=400)
     try:
         container.delete_item(item=product_id, partition_key=category)
-        return func.HttpResponse(
-            json.dumps({"message": f"Product {product_id} deleted successfully!"}),
-            mimetype="application/json"
-        )
+        return func.HttpResponse(json.dumps({"message": f"Product {product_id} deleted successfully!"}), mimetype="application/json")
     except exceptions.CosmosResourceNotFoundError:
-        return func.HttpResponse(
-            json.dumps({"error": "Product not found"}),
-            mimetype="application/json",
-            status_code=404
-        )
+        return func.HttpResponse(json.dumps({"error": "Product not found"}), mimetype="application/json", status_code=404)

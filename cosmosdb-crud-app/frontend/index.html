@@ -1,100 +1,115 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Product CRUD</title>
-  <style>
-    body { font-family: Arial; padding: 20px; }
-    input { margin: 5px; }
-    table { margin-top: 20px; border-collapse: collapse; width: 100%; }
-    th, td { border: 1px solid #ccc; padding: 8px; text-align: left; }
-    th { background: #eee; }
-  </style>
+    <title>Cosmos DB CRUD Demo</title>
 </head>
 <body>
-  <h2>Product Management</h2>
+    <h1>Product CRUD Demo</h1>
 
-  <input id="id" placeholder="ID">
-  <input id="name" placeholder="Name">
-  <input id="category" placeholder="Category">
-  <input id="price" placeholder="Price">
-  <br>
-  <button onclick="createProduct()">Create</button>
-  <button onclick="updateProduct()">Update</button>
-  <button onclick="readProduct()">Read</button>
-  <button onclick="deleteProduct()">Delete</button>
+    <h2>Create / Update Product</h2>
+    <input type="text" id="id" placeholder="ID">
+    <input type="text" id="name" placeholder="Name">
+    <input type="text" id="category" placeholder="Category">
+    <input type="number" id="price" placeholder="Price">
+    <button onclick="createProduct()">Create / Insert</button>
+    <button onclick="updateProduct()">Update</button>
 
-  <h3>All Products</h3>
-  <table>
-    <thead>
-      <tr><th>ID</th><th>Name</th><th>Category</th><th>Price</th></tr>
-    </thead>
-    <tbody id="products-body"></tbody>
-  </table>
+    <h2>Delete Product</h2>
+    <input type="text" id="deleteId" placeholder="ID">
+    <input type="text" id="deleteCategory" placeholder="Category">
+    <button onclick="deleteProduct()">Delete</button>
 
-  <script>
-    const API_URL = "/api/ProductFunction";
+    <h2>Products</h2>
+    <button onclick="getProducts()">Load All Products</button>
+    <div id="message" style="color: green; font-weight: bold;"></div>
+    <pre id="output"></pre>
 
-    async function createProduct() {
-      const product = getProductFormData();
-      const response = await fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(product)
-      });
-      alert((await response.json()).message || "Error");
-      loadProducts();
-    }
+    <script>
+        const apiUrl = "/api/ProductFunction";
 
-    async function updateProduct() {
-      const product = getProductFormData();
-      const response = await fetch(API_URL, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(product)
-      });
-      alert((await response.json()).message || "Error");
-      loadProducts();
-    }
+        function showOutput(data) {
+            document.getElementById("output").textContent = JSON.stringify(data, null, 2);
+        }
 
-    async function readProduct() {
-      const id = document.getElementById("id").value;
-      const category = document.getElementById("category").value;
-      const response = await fetch(`${API_URL}?id=${id}&Category=${category}`);
-      alert(JSON.stringify(await response.json(), null, 2));
-    }
+        function showMessage(msg) {
+            const messageDiv = document.getElementById("message");
+            messageDiv.textContent = msg;
+            setTimeout(() => { messageDiv.textContent = ""; }, 3000); // clear after 3 sec
+        }
 
-    async function deleteProduct() {
-      const id = document.getElementById("id").value;
-      const category = document.getElementById("category").value;
-      const response = await fetch(`${API_URL}?id=${id}&Category=${category}`, { method: "DELETE" });
-      alert((await response.json()).message || "Error");
-      loadProducts();
-    }
+        async function createProduct() {
+            const id = document.getElementById("id").value.trim();
+            const name = document.getElementById("name").value.trim();
+            const category = document.getElementById("category").value.trim();
+            const price = document.getElementById("price").value.trim();
 
-    async function loadProducts() {
-      const response = await fetch(API_URL);
-      const text = await response.text();
-      const products = text ? JSON.parse(text) : [];
-      const tbody = document.getElementById("products-body");
-      tbody.innerHTML = "";
-      products.forEach(p => {
-        tbody.innerHTML += `<tr>
-          <td>${p.id}</td><td>${p.name}</td><td>${p.Category}</td><td>${p.price}</td>
-        </tr>`;
-      });
-    }
+            if (!id || !name || !category || !price) {
+                alert("All fields are required for creating a product.");
+                return;
+            }
 
-    function getProductFormData() {
-      return {
-        id: document.getElementById("id").value,
-        name: document.getElementById("name").value,
-        Category: document.getElementById("category").value,
-        price: parseFloat(document.getElementById("price").value || 0)
-      };
-    }
+            const product = { id, name, Category: category, price: parseFloat(price) };
 
-    window.onload = loadProducts;
-  </script>
+            const res = await fetch(apiUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(product)
+            });
+            const data = await res.json();
+            showOutput(data);
+            showMessage("Insert done ✅");
+            getProducts(); // refresh list
+        }
+
+        async function updateProduct() {
+            const id = document.getElementById("id").value.trim();
+            const name = document.getElementById("name").value.trim();
+            const category = document.getElementById("category").value.trim();
+            const price = document.getElementById("price").value.trim();
+
+            if (!id || !name || !category || !price) {
+                alert("All fields are required for updating a product.");
+                return;
+            }
+
+            const product = { id, name, Category: category, price: parseFloat(price) };
+
+            const res = await fetch(apiUrl, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(product)
+            });
+            const data = await res.json();
+            showOutput(data);
+            showMessage("Update done ✅");
+            getProducts(); // refresh list
+        }
+
+        async function deleteProduct() {
+            const id = document.getElementById("deleteId").value.trim();
+            const category = document.getElementById("deleteCategory").value.trim();
+
+            if (!id || !category) {
+                alert("ID and Category are required to delete a product.");
+                return;
+            }
+
+            const res = await fetch(`${apiUrl}?id=${id}&Category=${category}`, { method: "DELETE" });
+            const data = await res.json();
+            showOutput(data);
+            showMessage("Delete done ✅");
+            getProducts(); // refresh list
+        }
+
+        async function getProducts() {
+            const res = await fetch(apiUrl);
+            const data = await res.json();
+            showOutput(data);
+        }
+
+        // Load products automatically on page load
+        getProducts();
+    </script>
 </body>
 </html>
 

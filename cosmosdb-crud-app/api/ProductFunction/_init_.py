@@ -4,7 +4,7 @@ import os
 import json
 from azure.cosmos import CosmosClient, exceptions
 
-# --- Cosmos DB config from Static Web App settings ---
+# --- Cosmos DB config ---
 COSMOS_URL = os.environ["COSMOS_URL"]
 COSMOS_KEY = os.environ["COSMOS_KEY"]
 DATABASE_NAME = os.environ["DATABASE_NAME"]
@@ -17,13 +17,11 @@ container = database.get_container_client(CONTAINER_NAME)
 
 def main(req: func.HttpRequest) -> func.HttpResponse:
     logging.info('HTTP trigger function processed a request.')
-
     try:
         method = req.method
         product_id = req.params.get('id')
         category = req.params.get('Category')
 
-        # --- GET all or single product ---
         if method == "GET":
             if product_id and category:
                 try:
@@ -40,7 +38,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 items = list(container.query_items(query=query, enable_cross_partition_query=True))
                 return func.HttpResponse(json.dumps(items), mimetype="application/json")
 
-        # --- POST: create product ---
         elif method == "POST":
             data = req.get_json()
             if "Category" not in data:
@@ -56,7 +53,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 mimetype="application/json"
             )
 
-        # --- PUT: update product ---
         elif method == "PUT":
             data = req.get_json()
             if "id" not in data or "Category" not in data:
@@ -72,7 +68,6 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 mimetype="application/json"
             )
 
-        # --- DELETE: remove product ---
         elif method == "DELETE":
             if not product_id or not category:
                 return func.HttpResponse(
@@ -101,5 +96,3 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             status_code=500,
             mimetype="application/json"
         )
-
-

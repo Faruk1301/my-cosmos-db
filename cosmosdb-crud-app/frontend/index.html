@@ -3,148 +3,149 @@
 <head>
     <title>Product CRUD Demo</title>
     <style>
-        .highlight {
-            background-color: #d4edda; /* light green */
-            padding: 2px;
-            margin: 2px 0;
-        }
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        input, button { margin: 5px 0; padding: 5px; }
+        .highlight { background-color: #d4edda; padding: 2px; margin: 2px 0; }
+        #output div { border-bottom: 1px solid #ccc; padding: 4px; }
     </style>
 </head>
 <body>
-    <h1>Product CRUD Demo</h1>
+<h1>Product CRUD Demo</h1>
 
-    <h2>Create / Update Product</h2>
-    <input type="text" id="id" placeholder="ID">
-    <input type="text" id="name" placeholder="Name">
-    <input type="text" id="category" placeholder="Category">
-    <input type="number" id="price" placeholder="Price">
-    <button onclick="createProduct()">Create / Insert</button>
-    <button onclick="updateProduct()">Update</button>
+<h2>Create / Update Product</h2>
+<input type="text" id="id" placeholder="ID">
+<input type="text" id="name" placeholder="Name">
+<input type="text" id="category" placeholder="Category">
+<input type="number" id="price" placeholder="Price">
+<button onclick="createProduct()">Insert</button>
+<button onclick="updateProduct()">Update</button>
 
-    <h2>Delete Product</h2>
-    <input type="text" id="deleteId" placeholder="ID">
-    <input type="text" id="deleteCategory" placeholder="Category">
-    <button onclick="deleteProduct()">Delete</button>
+<h2>Delete Product</h2>
+<input type="text" id="deleteId" placeholder="ID">
+<input type="text" id="deleteCategory" placeholder="Category">
+<button onclick="deleteProduct()">Delete</button>
 
-    <h2>Products</h2>
-    <button onclick="getProducts()">Load All Products</button>
-    <div id="message" style="color: green; font-weight: bold;"></div>
-    <div id="output"></div>
+<h2>Search Product by ID</h2>
+<input type="text" id="searchId" placeholder="ID">
+<button onclick="searchById()">Search</button>
 
-    <script>
-        const apiUrl = "/api/ProductFunction";
-        let lastChangedId = null;
-        let lastChangedCategory = null;
+<h2>All Products</h2>
+<button onclick="getProducts()">Load All</button>
+<div id="message" style="color: green; font-weight: bold;"></div>
+<div id="output"></div>
 
-        function showMessage(msg) {
-            const messageDiv = document.getElementById("message");
-            messageDiv.textContent = msg;
-            setTimeout(() => { messageDiv.textContent = ""; }, 3000);
-        }
+<script>
+const apiUrl = "/api/ProductFunction";
+let lastChangedId = null;
+let lastChangedCategory = null;
 
-        function showOutput(data) {
-            const outputDiv = document.getElementById("output");
-            outputDiv.innerHTML = "";
+function showMessage(msg) {
+    const messageDiv = document.getElementById("message");
+    messageDiv.textContent = msg;
+    setTimeout(() => { messageDiv.textContent = ""; }, 3000);
+}
 
-            if (Array.isArray(data)) {
-                data.forEach(item => {
-                    const div = document.createElement("div");
-                    div.textContent = `ID: ${item.id}, Name: ${item.name}, Category: ${item.Category}, Price: ${item.price}`;
-                    if (item.id === lastChangedId && item.Category === lastChangedCategory) {
-                        div.classList.add("highlight");
-                        setTimeout(() => div.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
-                    }
-                    outputDiv.appendChild(div);
-                });
-            } else {
-                outputDiv.textContent = JSON.stringify(data, null, 2);
+function showOutput(data) {
+    const outputDiv = document.getElementById("output");
+    outputDiv.innerHTML = "";
+    if (!data) return;
+
+    if (Array.isArray(data)) {
+        data.forEach(item => {
+            const div = document.createElement("div");
+            div.textContent = `ID: ${item.id}, Name: ${item.name}, Category: ${item.Category}, Price: ${item.price}`;
+            if (item.id === lastChangedId && item.Category === lastChangedCategory) {
+                div.classList.add("highlight");
+                setTimeout(() => div.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
             }
-        }
+            outputDiv.appendChild(div);
+        });
+    } else {
+        outputDiv.textContent = JSON.stringify(data, null, 2);
+    }
+}
 
-        async function createProduct() {
-            const product = {
-                id: document.getElementById("id").value.trim(),
-                name: document.getElementById("name").value.trim(),
-                Category: document.getElementById("category").value.trim(),
-                price: parseFloat(document.getElementById("price").value.trim())
-            };
+async function createProduct() {
+    const product = {
+        id: document.getElementById("id").value.trim(),
+        name: document.getElementById("name").value.trim(),
+        Category: document.getElementById("category").value.trim(),
+        price: parseFloat(document.getElementById("price").value.trim())
+    };
+    if (!product.id || !product.name || !product.Category || isNaN(product.price)) {
+        alert("All fields are required and price must be a number.");
+        return;
+    }
+    const res = await fetch(apiUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(product)
+    });
+    const data = await res.json();
+    showMessage(data.message);
+    lastChangedId = product.id;
+    lastChangedCategory = product.Category;
+    getProducts();
+}
 
-            if (!product.id || !product.name || !product.Category || !product.price) {
-                alert("All fields are required for creating a product.");
-                return;
-            }
+async function updateProduct() {
+    const product = {
+        id: document.getElementById("id").value.trim(),
+        name: document.getElementById("name").value.trim(),
+        Category: document.getElementById("category").value.trim(),
+        price: parseFloat(document.getElementById("price").value.trim())
+    };
+    if (!product.id || !product.name || !product.Category || isNaN(product.price)) {
+        alert("All fields are required and price must be a number.");
+        return;
+    }
+    const res = await fetch(apiUrl, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(product)
+    });
+    const data = await res.json();
+    showMessage(data.message);
+    lastChangedId = product.id;
+    lastChangedCategory = product.Category;
+    getProducts();
+}
 
-            const res = await fetch(apiUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(product)
-            });
-            const data = await res.json();
-            showMessage(data.message);
+async function deleteProduct() {
+    const id = document.getElementById("deleteId").value.trim();
+    const category = document.getElementById("deleteCategory").value.trim();
+    if (!id || !category) { alert("ID and Category required."); return; }
 
-            lastChangedId = product.id;
-            lastChangedCategory = product.Category;
+    const res = await fetch(`${apiUrl}?id=${id}&Category=${category}`, { method: "DELETE" });
+    const data = await res.json();
+    showMessage(data.message);
+    if (lastChangedId === id && lastChangedCategory === category) {
+        lastChangedId = null; lastChangedCategory = null;
+    }
+    getProducts();
+}
 
-            getProducts();
-        }
+async function getProducts() {
+    const res = await fetch(apiUrl);
+    const data = await res.json();
+    showOutput(data);
+}
 
-        async function updateProduct() {
-            const product = {
-                id: document.getElementById("id").value.trim(),
-                name: document.getElementById("name").value.trim(),
-                Category: document.getElementById("category").value.trim(),
-                price: parseFloat(document.getElementById("price").value.trim())
-            };
+async function searchById() {
+    const id = document.getElementById("searchId").value.trim();
+    if (!id) { alert("Enter ID to search"); return; }
+    const res = await fetch(`${apiUrl}?id=${id}`);
+    if (res.status === 404) {
+        showMessage("Product not found");
+        document.getElementById("output").innerHTML = "";
+        return;
+    }
+    const data = await res.json();
+    showOutput(data);
+}
 
-            if (!product.id || !product.name || !product.Category || !product.price) {
-                alert("All fields are required for updating a product.");
-                return;
-            }
-
-            const res = await fetch(apiUrl, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(product)
-            });
-            const data = await res.json();
-            showMessage(data.message);
-
-            lastChangedId = product.id;
-            lastChangedCategory = product.Category;
-
-            getProducts();
-        }
-
-        async function deleteProduct() {
-            const id = document.getElementById("deleteId").value.trim();
-            const category = document.getElementById("deleteCategory").value.trim();
-
-            if (!id || !category) {
-                alert("ID and Category are required to delete a product.");
-                return;
-            }
-
-            const res = await fetch(`${apiUrl}?id=${id}&Category=${category}`, { method: "DELETE" });
-            const data = await res.json();
-            showMessage(data.message);
-
-            if (lastChangedId === id && lastChangedCategory === category) {
-                lastChangedId = null;
-                lastChangedCategory = null;
-            }
-
-            getProducts();
-        }
-
-        async function getProducts() {
-            const res = await fetch(apiUrl);
-            const data = await res.json();
-            showOutput(data);
-        }
-
-        // Auto-load products on page load
-        getProducts();
-    </script>
+// Auto-load products
+getProducts();
+</script>
 </body>
 </html>
-

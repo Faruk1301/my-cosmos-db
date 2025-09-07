@@ -6,7 +6,7 @@ async function createOrUpdate(action) {
         id: document.getElementById("id").value,
         name: document.getElementById("name").value,
         Category: document.getElementById("Category").value,
-        price: parseFloat(document.getElementById("price").value)
+        price: parseFloat(document.getElementById("price").value || 0)
     };
 
     const method = action === "create" ? "POST" : "PUT";
@@ -19,7 +19,7 @@ async function createOrUpdate(action) {
         });
 
         const data = await res.json();
-        document.getElementById("output").innerText = JSON.stringify(data, null, 2);
+        document.getElementById("output").innerText = data.message || data.error;
         loadAllProducts();
     } catch (err) {
         console.error("Error:", err);
@@ -34,9 +34,8 @@ async function readProduct() {
 
     try {
         const res = await fetch(`${apiUrl}?id=${encodeURIComponent(id)}&Category=${encodeURIComponent(category)}`);
-        if (!res.ok) throw new Error(await res.text());
         const data = await res.json();
-        document.getElementById("output").innerText = JSON.stringify(data, null, 2);
+        document.getElementById("output").innerText = data.error ? data.error : JSON.stringify(data, null, 2);
     } catch (err) {
         console.error(err);
         document.getElementById("output").innerText = "Error: " + err;
@@ -51,7 +50,7 @@ async function deleteProduct() {
     try {
         const res = await fetch(`${apiUrl}?id=${encodeURIComponent(id)}&Category=${encodeURIComponent(category)}`, { method: "DELETE" });
         const data = await res.json();
-        document.getElementById("output").innerText = JSON.stringify(data, null, 2);
+        document.getElementById("output").innerText = data.message || data.error;
         loadAllProducts();
     } catch (err) {
         console.error(err);
@@ -87,9 +86,6 @@ async function loadAllProducts() {
 
 // Load all products when the page loads
 window.onload = loadAllProducts;
-
-
-
 
 
 

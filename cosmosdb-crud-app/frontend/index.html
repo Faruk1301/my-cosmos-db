@@ -1,7 +1,14 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Cosmos DB CRUD Demo</title>
+    <title>Product CRUD Demo</title>
+    <style>
+        .highlight {
+            background-color: #d4edda; /* light green */
+            padding: 2px;
+            margin: 2px 0;
+        }
+    </style>
 </head>
 <body>
     <h1>Product CRUD Demo</h1>
@@ -22,33 +29,50 @@
     <h2>Products</h2>
     <button onclick="getProducts()">Load All Products</button>
     <div id="message" style="color: green; font-weight: bold;"></div>
-    <pre id="output"></pre>
+    <div id="output"></div>
 
     <script>
         const apiUrl = "/api/ProductFunction";
-
-        function showOutput(data) {
-            document.getElementById("output").textContent = JSON.stringify(data, null, 2);
-        }
+        let lastChangedId = null;
+        let lastChangedCategory = null;
 
         function showMessage(msg) {
             const messageDiv = document.getElementById("message");
             messageDiv.textContent = msg;
-            setTimeout(() => { messageDiv.textContent = ""; }, 3000); // clear after 3 sec
+            setTimeout(() => { messageDiv.textContent = ""; }, 3000);
+        }
+
+        function showOutput(data) {
+            const outputDiv = document.getElementById("output");
+            outputDiv.innerHTML = "";
+
+            if (Array.isArray(data)) {
+                data.forEach(item => {
+                    const div = document.createElement("div");
+                    div.textContent = `ID: ${item.id}, Name: ${item.name}, Category: ${item.Category}, Price: ${item.price}`;
+                    if (item.id === lastChangedId && item.Category === lastChangedCategory) {
+                        div.classList.add("highlight");
+                        setTimeout(() => div.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
+                    }
+                    outputDiv.appendChild(div);
+                });
+            } else {
+                outputDiv.textContent = JSON.stringify(data, null, 2);
+            }
         }
 
         async function createProduct() {
-            const id = document.getElementById("id").value.trim();
-            const name = document.getElementById("name").value.trim();
-            const category = document.getElementById("category").value.trim();
-            const price = document.getElementById("price").value.trim();
+            const product = {
+                id: document.getElementById("id").value.trim(),
+                name: document.getElementById("name").value.trim(),
+                Category: document.getElementById("category").value.trim(),
+                price: parseFloat(document.getElementById("price").value.trim())
+            };
 
-            if (!id || !name || !category || !price) {
+            if (!product.id || !product.name || !product.Category || !product.price) {
                 alert("All fields are required for creating a product.");
                 return;
             }
-
-            const product = { id, name, Category: category, price: parseFloat(price) };
 
             const res = await fetch(apiUrl, {
                 method: "POST",
@@ -56,23 +80,26 @@
                 body: JSON.stringify(product)
             });
             const data = await res.json();
-            showOutput(data);
-            showMessage("Insert done ✅");
-            getProducts(); // refresh list
+            showMessage(data.message);
+
+            lastChangedId = product.id;
+            lastChangedCategory = product.Category;
+
+            getProducts();
         }
 
         async function updateProduct() {
-            const id = document.getElementById("id").value.trim();
-            const name = document.getElementById("name").value.trim();
-            const category = document.getElementById("category").value.trim();
-            const price = document.getElementById("price").value.trim();
+            const product = {
+                id: document.getElementById("id").value.trim(),
+                name: document.getElementById("name").value.trim(),
+                Category: document.getElementById("category").value.trim(),
+                price: parseFloat(document.getElementById("price").value.trim())
+            };
 
-            if (!id || !name || !category || !price) {
+            if (!product.id || !product.name || !product.Category || !product.price) {
                 alert("All fields are required for updating a product.");
                 return;
             }
-
-            const product = { id, name, Category: category, price: parseFloat(price) };
 
             const res = await fetch(apiUrl, {
                 method: "PUT",
@@ -80,9 +107,12 @@
                 body: JSON.stringify(product)
             });
             const data = await res.json();
-            showOutput(data);
-            showMessage("Update done ✅");
-            getProducts(); // refresh list
+            showMessage(data.message);
+
+            lastChangedId = product.id;
+            lastChangedCategory = product.Category;
+
+            getProducts();
         }
 
         async function deleteProduct() {
@@ -96,9 +126,14 @@
 
             const res = await fetch(`${apiUrl}?id=${id}&Category=${category}`, { method: "DELETE" });
             const data = await res.json();
-            showOutput(data);
-            showMessage("Delete done ✅");
-            getProducts(); // refresh list
+            showMessage(data.message);
+
+            if (lastChangedId === id && lastChangedCategory === category) {
+                lastChangedId = null;
+                lastChangedCategory = null;
+            }
+
+            getProducts();
         }
 
         async function getProducts() {
@@ -107,7 +142,7 @@
             showOutput(data);
         }
 
-        // Load products automatically on page load
+        // Auto-load products on page load
         getProducts();
     </script>
 </body>

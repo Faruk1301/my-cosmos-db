@@ -1,151 +1,79 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Product CRUD Demo</title>
-    <style>
-        body { font-family: Arial, sans-serif; margin: 20px; }
-        input, button { margin: 5px 0; padding: 5px; }
-        .highlight { background-color: #d4edda; padding: 2px; margin: 2px 0; }
-        #output div { border-bottom: 1px solid #ccc; padding: 4px; }
-    </style>
+  <title>Product CRUD</title>
+  <meta charset="UTF-8" />
 </head>
 <body>
-<h1>Product CRUD Demo</h1>
+  <h2>Product CRUD</h2>
 
-<h2>Create / Update Product</h2>
-<input type="text" id="id" placeholder="ID">
-<input type="text" id="name" placeholder="Name">
-<input type="text" id="category" placeholder="Category">
-<input type="number" id="price" placeholder="Price">
-<button onclick="createProduct()">Insert</button>
-<button onclick="updateProduct()">Update</button>
+  <!-- Insert / Update -->
+  <input id="id" placeholder="ID" />
+  <input id="name" placeholder="Name" />
+  <input id="Category" placeholder="Category" />
+  <input id="price" placeholder="Price" />
+  <button onclick="sendData('POST')">Insert</button>
+  <button onclick="sendData('PUT')">Update</button>
+  <br><br>
 
-<h2>Delete Product</h2>
-<input type="text" id="deleteId" placeholder="ID">
-<input type="text" id="deleteCategory" placeholder="Category">
-<button onclick="deleteProduct()">Delete</button>
+  <!-- Search / Delete -->
+  <input id="searchId" placeholder="Search ID" />
+  <input id="searchCategory" placeholder="Category" />
+  <button onclick="getProduct()">Search</button>
+  <button onclick="deleteProduct()">Delete</button>
+  <button onclick="getAllProducts()">Get All</button>
 
-<h2>Search Product by ID</h2>
-<input type="text" id="searchId" placeholder="ID">
-<button onclick="searchById()">Search</button>
+  <pre id="output"></pre>
 
-<h2>All Products</h2>
-<button onclick="getProducts()">Load All</button>
-<div id="message" style="color: green; font-weight: bold;"></div>
-<div id="output"></div>
+  <script>
+    const apiUrl = "/api/ProductFunction";
 
-<script>
-const apiUrl = "/api/ProductFunction";
-let lastChangedId = null;
-let lastChangedCategory = null;
+    async function sendData(method) {
+      const data = {
+        id: document.getElementById("id").value,
+        name: document.getElementById("name").value,
+        Category: document.getElementById("Category").value, // Capital C
+        price: parseFloat(document.getElementById("price").value)
+      };
 
-function showMessage(msg) {
-    const messageDiv = document.getElementById("message");
-    messageDiv.textContent = msg;
-    setTimeout(() => { messageDiv.textContent = ""; }, 3000);
-}
-
-function showOutput(data) {
-    const outputDiv = document.getElementById("output");
-    outputDiv.innerHTML = "";
-    if (!data) return;
-
-    if (Array.isArray(data)) {
-        data.forEach(item => {
-            const div = document.createElement("div");
-            div.textContent = `ID: ${item.id}, Name: ${item.name}, Category: ${item.Category}, Price: ${item.price}`;
-            if (item.id === lastChangedId && item.Category === lastChangedCategory) {
-                div.classList.add("highlight");
-                setTimeout(() => div.scrollIntoView({ behavior: "smooth", block: "center" }), 50);
-            }
-            outputDiv.appendChild(div);
-        });
-    } else {
-        outputDiv.textContent = JSON.stringify(data, null, 2);
-    }
-}
-
-async function createProduct() {
-    const product = {
-        id: document.getElementById("id").value.trim(),
-        name: document.getElementById("name").value.trim(),
-        Category: document.getElementById("category").value.trim(),
-        price: parseFloat(document.getElementById("price").value.trim())
-    };
-    if (!product.id || !product.name || !product.Category || isNaN(product.price)) {
-        alert("All fields are required and price must be a number.");
-        return;
-    }
-    const res = await fetch(apiUrl, {
-        method: "POST",
+      const res = await fetch(apiUrl, {
+        method,
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(product)
-    });
-    const data = await res.json();
-    showMessage(data.message);
-    lastChangedId = product.id;
-    lastChangedCategory = product.Category;
-    getProducts();
-}
+        body: JSON.stringify(data)
+      });
 
-async function updateProduct() {
-    const product = {
-        id: document.getElementById("id").value.trim(),
-        name: document.getElementById("name").value.trim(),
-        Category: document.getElementById("category").value.trim(),
-        price: parseFloat(document.getElementById("price").value.trim())
-    };
-    if (!product.id || !product.name || !product.Category || isNaN(product.price)) {
-        alert("All fields are required and price must be a number.");
-        return;
+      showOutput(await res.json());
     }
-    const res = await fetch(apiUrl, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(product)
-    });
-    const data = await res.json();
-    showMessage(data.message);
-    lastChangedId = product.id;
-    lastChangedCategory = product.Category;
-    getProducts();
-}
 
-async function deleteProduct() {
-    const id = document.getElementById("deleteId").value.trim();
-    const category = document.getElementById("deleteCategory").value.trim();
-    if (!id || !category) { alert("ID and Category required."); return; }
+    async function getProduct() {
+      const id = document.getElementById("searchId").value;
+      const category = document.getElementById("searchCategory").value;
 
-    const res = await fetch(`${apiUrl}?id=${id}&Category=${category}`, { method: "DELETE" });
-    const data = await res.json();
-    showMessage(data.message);
-    if (lastChangedId === id && lastChangedCategory === category) {
-        lastChangedId = null; lastChangedCategory = null;
+      const res = await fetch(`${apiUrl}?id=${id}&Category=${category}`);
+      showOutput(await res.json());
     }
-    getProducts();
-}
 
-async function getProducts() {
-    const res = await fetch(apiUrl);
-    const data = await res.json();
-    showOutput(data);
-}
+    async function deleteProduct() {
+      const id = document.getElementById("searchId").value;
+      const category = document.getElementById("searchCategory").value;
 
-async function searchById() {
-    const id = document.getElementById("searchId").value.trim();
-    if (!id) { alert("Enter ID to search"); return; }
-    const res = await fetch(`${apiUrl}?id=${id}`);
-    if (res.status === 404) {
-        showMessage("Product not found");
-        document.getElementById("output").innerHTML = "";
-        return;
+      const res = await fetch(`${apiUrl}?id=${id}&Category=${category}`, {
+        method: "DELETE"
+      });
+      showOutput(await res.json());
     }
-    const data = await res.json();
-    showOutput(data);
-}
 
-// Auto-load products
-getProducts();
-</script>
+    async function getAllProducts() {
+      const res = await fetch(apiUrl); // no id/category → return all
+      showOutput(await res.json());
+    }
+
+    function showOutput(data) {
+      document.getElementById("output").innerText =
+        JSON.stringify(data, null, 2); // pretty print JSON
+    }
+  </script>
 </body>
 </html>
+
+

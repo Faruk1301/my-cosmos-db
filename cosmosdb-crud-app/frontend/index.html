@@ -26,13 +26,14 @@
   <pre id="output"></pre>
 
   <script>
-    const apiUrl = "/api/ProductFunction";
+    // Updated to point to your Function App
+    const apiUrl = "https://crud-db-standard.azurewebsites.net/api/ProductFunction";
 
     async function sendData(method) {
       const data = {
         id: document.getElementById("id").value,
         name: document.getElementById("name").value,
-        Category: document.getElementById("Category").value, // Capital C
+        Category: document.getElementById("Category").value,
         price: parseFloat(document.getElementById("price").value)
       };
 
@@ -64,13 +65,13 @@
     }
 
     async function getAllProducts() {
-      const res = await fetch(apiUrl); // no id/category → return all
+      const res = await fetch(apiUrl);
       showOutput(await res.json());
     }
 
     function showOutput(data) {
       document.getElementById("output").innerText =
-        JSON.stringify(data, null, 2); // pretty print JSON
+        JSON.stringify(data, null, 2);
     }
   </script>
 </body>

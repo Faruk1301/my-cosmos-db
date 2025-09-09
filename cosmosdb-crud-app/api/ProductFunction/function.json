@@ -6,7 +6,7 @@
       "direction": "in",
       "name": "req",
       "methods": ["get", "post", "put", "delete"],
-      "route": "ProductFunction"
+      "route": "productfunction"
     },
     {
       "type": "http",
@@ -15,3 +15,4 @@
     }
   ]
 }
+

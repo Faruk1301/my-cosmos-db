@@ -8,17 +8,17 @@
   <h2>Product CRUD</h2>
 
   <!-- Insert / Update -->
-  <input id="id" placeholder="ID" />
-  <input id="name" placeholder="Name" />
-  <input id="Category" placeholder="Category" />
-  <input id="price" placeholder="Price" />
+  <input id="id" placeholder="Enter Product ID" />
+  <input id="name" placeholder="Enter Product Name" />
+  <input id="Category" placeholder="Enter Product Category" />
+  <input id="price" placeholder="Enter Product Price" />
   <button onclick="sendData('POST')">Insert</button>
   <button onclick="sendData('PUT')">Update</button>
   <br><br>
 
   <!-- Search / Delete -->
-  <input id="searchId" placeholder="Search ID" />
-  <input id="searchCategory" placeholder="Category" />
+  <input id="searchId" placeholder="Enter Product ID to Search/Delete" />
+  <input id="searchCategory" placeholder="Enter Product Category" />
   <button onclick="getProduct()">Search</button>
   <button onclick="deleteProduct()">Delete</button>
   <button onclick="getAllProducts()">Get All</button>
@@ -26,14 +26,37 @@
   <pre id="output"></pre>
 
   <script>
-    // Updated to point to your Function App
-    const apiUrl =  "https://crud-db-standard.azurewebsites.net/api/productfunction";
+    // Function App API URL
+    const apiUrl = "https://crud-db-standard.azurewebsites.net/api/productfunction";
+
+    // Handle backend response (works with both JSON and text)
+    async function handleResponse(res) {
+      const text = await res.text();
+      try {
+        return JSON.parse(text);
+      } catch {
+        return { message: text };
+      }
+    }
+
+    // Insert / Update with validation
     async function sendData(method) {
+      const id = document.getElementById("id").value.trim();
+      const name = document.getElementById("name").value.trim();
+      const Category = document.getElementById("Category").value.trim();
+      const price = document.getElementById("price").value.trim();
+
+      // Validation for required fields
+      if (!id || !name || !Category || !price) {
+        alert("All fields (ID, Name, Category, Price) are required.");
+        return;
+      }
+
       const data = {
-        id: document.getElementById("id").value,
-        name: document.getElementById("name").value,
-        Category: document.getElementById("Category").value,
-        price: parseFloat(document.getElementById("price").value)
+        id: id,
+        name: name,
+        Category: Category,
+        price: parseFloat(price)
       };
 
       const res = await fetch(apiUrl, {
@@ -42,32 +65,46 @@
         body: JSON.stringify(data)
       });
 
-      showOutput(await res.json());
+      showOutput(await handleResponse(res));
     }
 
+    // Search by ID + Category
     async function getProduct() {
-      const id = document.getElementById("searchId").value;
-      const category = document.getElementById("searchCategory").value;
+      const id = document.getElementById("searchId").value.trim();
+      const category = document.getElementById("searchCategory").value.trim();
+
+      if (!id || !category) {
+        alert("Both ID and Category are required for search.");
+        return;
+      }
 
       const res = await fetch(`${apiUrl}?id=${id}&Category=${category}`);
-      showOutput(await res.json());
+      showOutput(await handleResponse(res));
     }
 
+    // Delete by ID + Category
     async function deleteProduct() {
-      const id = document.getElementById("searchId").value;
-      const category = document.getElementById("searchCategory").value;
+      const id = document.getElementById("searchId").value.trim();
+      const category = document.getElementById("searchCategory").value.trim();
+
+      if (!id || !category) {
+        alert("Both ID and Category are required for delete.");
+        return;
+      }
 
       const res = await fetch(`${apiUrl}?id=${id}&Category=${category}`, {
         method: "DELETE"
       });
-      showOutput(await res.json());
+      showOutput(await handleResponse(res));
     }
 
+    // Get all products
     async function getAllProducts() {
       const res = await fetch(apiUrl);
-      showOutput(await res.json());
+      showOutput(await handleResponse(res));
     }
 
+    // Display output in <pre>
     function showOutput(data) {
       document.getElementById("output").innerText =
         JSON.stringify(data, null, 2);
@@ -75,6 +112,8 @@
   </script>
 </body>
 </html>
+
+
 
 
 

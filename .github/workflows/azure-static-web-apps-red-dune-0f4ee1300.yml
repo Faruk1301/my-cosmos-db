@@ -1,4 +1,4 @@
-name: Azure Static Web Apps CI/CD
+name: Azure Static Web Apps CI/CD - Frontend
 
 on:
   push:
@@ -11,33 +11,17 @@ on:
 
 jobs:
   build_and_deploy_job:
-    if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
+    name: Build and Deploy Frontend
     steps:
-      # Step 1: Checkout your repo
       - uses: actions/checkout@v3
 
-      # Step 2: Build & Deploy to Azure Static Web Apps
-      - name: Build And Deploy
+      - name: Deploy to Azure Static Web App
         uses: Azure/static-web-apps-deploy@v1
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          app_location: "cosmosdb-crud-app/frontend"   # frontend folder
-          api_location: "cosmosdb-crud-app/api"        # API folder
-          output_location: ""                           # no build folder for plain HTML/JS
-          skip_app_build: true                          # skip frontend build
-          skip_api_build: true                          # skip API build
-
-  close_pull_request_job:
-    if: github.event_name == 'pull_request' && github.event.action == 'closed'
-    runs-on: ubuntu-latest
-    steps:
-      - name: Close Pull Request
-        uses: Azure/static-web-apps-deploy@v1
-        with:
-          azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
-          action: "close"
-
-
+          app_location: "cosmosdb-crud-app/frontend"  # Path to your frontend code
+          output_location: ""  # Empty because index.html is in the root of frontend
+          skip_app_build: true  # Since you're using plain HTML/JS

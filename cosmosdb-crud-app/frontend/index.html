@@ -1,117 +1,132 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Product CRUD</title>
-  <meta charset="UTF-8" />
+    <title>API Tester</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test-area { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        pre { background: #f5f5f5; padding: 10px; overflow: auto; }
+        button { padding: 8px 15px; margin: 5px 0; cursor: pointer; }
+    </style>
 </head>
 <body>
-  <h2>Product CRUD</h2>
+    <h2>API Test Page</h2>
+    
+    <div class="test-area">
+        <h3>1. Test GET Request</h3>
+        <button onclick="testGet()">Test GET /api/productfunction</button>
+        <pre id="getResult">Click the button to test GET request</pre>
+    </div>
 
-  <!-- Insert / Update -->
-  <input id="id" placeholder="Enter Product ID" />
-  <input id="name" placeholder="Enter Product Name" />
-  <input id="Category" placeholder="Enter Product Category" />
-  <input id="price" placeholder="Enter Product Price" />
-  <button onclick="sendData('POST')">Insert</button>
-  <button onclick="sendData('PUT')">Update</button>
-  <br><br>
+    <div class="test-area">
+        <h3>2. Test POST Request</h3>
+        <button onclick="testPost()">Test POST /api/productfunction</button>
+        <pre id="postResult">Click the button to test POST request</pre>
+    </div>
 
-  <!-- Search / Delete -->
-  <input id="searchId" placeholder="Enter Product ID to Search/Delete" />
-  <input id="searchCategory" placeholder="Enter Product Category" />
-  <button onclick="getProduct()">Search</button>
-  <button onclick="deleteProduct()">Delete</button>
-  <button onclick="getAllProducts()">Get All</button>
+    <div class="test-area">
+        <h3>3. Raw Request Tester</h3>
+        <button onclick="testCustomRequest()">Send Request</button>
+        <div>
+            <label>Method:</label>
+            <select id="method">
+                <option>GET</option>
+                <option>POST</option>
+                <option>PUT</option>
+                <option>DELETE</option>
+            </select>
+        </div>
+        <div>
+            <label>URL:</label>
+            <input type="text" id="customUrl" value="/api/productfunction" style="width: 300px;">
+        </div>
+        <div>
+            <label>Body (for POST/PUT):</label><br>
+            <textarea id="requestBody" rows="5" style="width: 100%;">{
+  "id": "test123",
+  "name": "Test Product",
+  "Category": "Test Category",
+  "price": 9.99
+}</textarea>
+        </div>
+        <pre id="customResult">Response will appear here</pre>
+    </div>
 
-  <pre id="output"></pre>
+    <script>
+        const API_BASE = 'https://webprosky.com';
 
-  <script>
-    // Use relative path for API so it works on custom domain
-    const apiUrl = "/api/productfunction";
+        async function testGet() {
+            try {
+                const response = await fetch(API_BASE + '/api/productfunction');
+                const result = await safeJsonResponse(response);
+                document.getElementById('getResult').textContent = formatResponse(response, result);
+            } catch (error) {
+                document.getElementById('getResult').textContent = `Error: ${error.message}`;
+            }
+        }
 
-    // Handle backend response (works with both JSON and text)
-    async function handleResponse(res) {
-      const text = await res.text();
-      try {
-        return JSON.parse(text);
-      } catch {
-        return { message: text };
-      }
-    }
+        async function testPost() {
+            try {
+                const data = {
+                    id: "test" + Date.now(),
+                    name: "Test Product",
+                    Category: "Test Category",
+                    price: 9.99
+                };
 
-    // Insert / Update with validation
-    async function sendData(method) {
-      const id = document.getElementById("id").value.trim();
-      const name = document.getElementById("name").value.trim();
-      const Category = document.getElementById("Category").value.trim();
-      const price = document.getElementById("price").value.trim();
+                const response = await fetch(API_BASE + '/api/productfunction', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
 
-      if (!id || !name || !Category || !price) {
-        alert("All fields (ID, Name, Category, Price) are required.");
-        return;
-      }
+                const result = await safeJsonResponse(response);
+                document.getElementById('postResult').textContent = formatResponse(response, result);
+            } catch (error) {
+                document.getElementById('postResult').textContent = `Error: ${error.message}`;
+            }
+        }
 
-      const data = {
-        id: id,
-        name: name,
-        Category: Category,
-        price: parseFloat(price)
-      };
+        async function testCustomRequest() {
+            try {
+                const method = document.getElementById('method').value;
+                const url = document.getElementById('customUrl').value;
+                const body = document.getElementById('requestBody').value;
 
-      const res = await fetch(apiUrl, {
-        method,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data)
-      });
+                const options = {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' }
+                };
 
-      showOutput(await handleResponse(res));
-    }
+                if (['POST', 'PUT'].includes(method)) {
+                    options.body = body;
+                }
 
-    // Search by ID + Category
-    async function getProduct() {
-      const id = document.getElementById("searchId").value.trim();
-      const category = document.getElementById("searchCategory").value.trim();
+                const response = await fetch(API_BASE + url, options);
+                const result = await safeJsonResponse(response);
+                document.getElementById('customResult').textContent = formatResponse(response, result);
+            } catch (error) {
+                document.getElementById('customResult').textContent = `Error: ${error.message}`;
+            }
+        }
 
-      if (!id || !category) {
-        alert("Both ID and Category are required for search.");
-        return;
-      }
+        async function safeJsonResponse(response) {
+            const text = await response.text();
+            try {
+                return JSON.parse(text);
+            } catch {
+                return text;
+            }
+        }
 
-      const res = await fetch(`${apiUrl}?id=${id}&Category=${category}`);
-      showOutput(await handleResponse(res));
-    }
-
-    // Delete by ID + Category
-    async function deleteProduct() {
-      const id = document.getElementById("searchId").value.trim();
-      const category = document.getElementById("searchCategory").value.trim();
-
-      if (!id || !category) {
-        alert("Both ID and Category are required for delete.");
-        return;
-      }
-
-      const res = await fetch(`${apiUrl}?id=${id}&Category=${category}`, {
-        method: "DELETE"
-      });
-      showOutput(await handleResponse(res));
-    }
-
-    // Get all products
-    async function getAllProducts() {
-      const res = await fetch(apiUrl);
-      showOutput(await handleResponse(res));
-    }
-
-    // Display output in <pre>
-    function showOutput(data) {
-      document.getElementById("output").innerText =
-        JSON.stringify(data, null, 2);
-    }
-  </script>
+        function formatResponse(response, data) {
+            return `Status: ${response.status} ${response.statusText}\n` +
+                   `Headers: ${JSON.stringify([...response.headers.entries()], null, 2)}\n\n` +
+                   `Response: ${typeof data === 'string' ? data : JSON.stringify(data, null, 2)}`;
+        }
+    </script>
 </body>
 </html>
-
 
 
 

@@ -14,12 +14,12 @@ jobs:
     if: github.event_name == 'push' || (github.event_name == 'pull_request' && github.event.action != 'closed')
     runs-on: ubuntu-latest
     steps:
-      # Checkout repo
+      # Step 1: Checkout your repo
       - uses: actions/checkout@v3
 
-      # Build & Deploy
+      # Step 2: Build & Deploy
       - name: Build And Deploy
-        uses: Azure/static-web-apps-deploy@v1
+        uses: Azure/static-web-apps-deploy@v1.0.0
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
@@ -35,7 +35,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Close Pull Request
-        uses: Azure/static-web-apps-deploy@v1
+        uses: Azure/static-web-apps-deploy@v1.0.0
         with:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN }}
           action: "close"
+

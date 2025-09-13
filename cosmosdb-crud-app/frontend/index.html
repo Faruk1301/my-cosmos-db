@@ -26,8 +26,8 @@
   <pre id="output"></pre>
 
   <script>
-    // Function App API URL
-    const apiUrl = "https://crud-db-standard.azurewebsites.net/api/productfunction";
+    // Use relative path for API so it works on custom domain
+    const apiUrl = "/api/productfunction";
 
     // Handle backend response (works with both JSON and text)
     async function handleResponse(res) {
@@ -46,7 +46,6 @@
       const Category = document.getElementById("Category").value.trim();
       const price = document.getElementById("price").value.trim();
 
-      // Validation for required fields
       if (!id || !name || !Category || !price) {
         alert("All fields (ID, Name, Category, Price) are required.");
         return;
@@ -112,7 +111,6 @@
   </script>
 </body>
 </html>
-
 
 
 

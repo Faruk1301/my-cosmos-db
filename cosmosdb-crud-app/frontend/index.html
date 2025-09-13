@@ -6,6 +6,7 @@
 </head>
 <body>
     <h2>Product CRUD</h2>
+    
     <!-- Insert / Update -->
     <input id="id" placeholder="Enter Product ID" />
     <input id="name" placeholder="Enter Product Name" />
@@ -14,16 +15,19 @@
     <button onclick="sendData('POST')">Insert</button>
     <button onclick="sendData('PUT')">Update</button>
     <br><br>
+    
     <!-- Search / Delete -->
     <input id="searchId" placeholder="Enter Product ID to Search/Delete" />
     <input id="searchCategory" placeholder="Enter Product Category" />
     <button onclick="getProduct()">Search</button>
     <button onclick="deleteProduct()">Delete</button>
     <button onclick="getAllProducts()">Get All</button>
+    
     <pre id="output"></pre>
+
     <script>
-        // Updated Function App API URL with custom domain
-        const apiUrl = "https://www.webprosky.com/api/productfunction";
+        // Function App API URL
+        const apiUrl = "https://crud-db-standard.azurewebsites.net/api/productfunction";
 
         // Handle backend response (works with both JSON and text)
         async function handleResponse(res) {
